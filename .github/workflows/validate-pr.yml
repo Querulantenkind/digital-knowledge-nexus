@@ -1,0 +1,64 @@
+name: Validate Pull Request
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '01-FUNDAMENTALS/**/*.md'
+      - '02-SOFTWARE-ENGINEERING/**/*.md'
+      - '03-HARDWARE/**/*.md'
+      - '04-ARTIFICIAL-INTELLIGENCE/**/*.md'
+      - '05-SYSTEMS/**/*.md'
+      - '06-SECURITY/**/*.md'
+      - '07-DATA-SCIENCE/**/*.md'
+      - '08-WEB-DEVELOPMENT/**/*.md'
+      - '09-MOBILE-DEVELOPMENT/**/*.md'
+      - '10-GAME-DEVELOPMENT/**/*.md'
+      - '11-SPECIALIZED-DOMAINS/**/*.md'
+      - '12-META-SKILLS/**/*.md'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        pip install -r scripts/requirements.txt
+        
+    - name: Validate repository structure
+      run: python3 scripts/validate_structure.py
+      
+    - name: Validate formatting of changed files
+      run: |
+        echo "Validating formatting of changed files..."
+        git diff --name-only origin/main...HEAD | grep '\.md$' | while read file; do
+          if [ -f "$file" ]; then
+            echo "Checking $file"
+            python3 scripts/validate_formatting.py "$file"
+          fi
+        done
+        
+    - name: Validate content of changed files
+      run: |
+        echo "Validating content of changed files..."
+        git diff --name-only origin/main...HEAD | grep '\.md$' | while read file; do
+          if [ -f "$file" ]; then
+            echo "Checking $file"
+            python3 scripts/validate_content.py "$file"
+          fi
+        done
+        
+    - name: Check for duplicates
+      run: python3 scripts/check_duplicates.py .
+      
+    - name: Generate statistics
+      run: python3 scripts/generate_statistics.py
