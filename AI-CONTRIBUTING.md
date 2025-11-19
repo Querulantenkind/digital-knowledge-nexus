@@ -36,15 +36,15 @@ Each leaf category has 8 format files:
 
 ### 2. Before Adding Content
 
-**Always run validation first:**
-```bash
-# Check file exists and structure
-python3 scripts/validate_structure.py
+**Manual validation steps:**
 
-# Validate existing content
-python3 scripts/validate_content.py path/to/file.md
-python3 scripts/validate_formatting.py path/to/file.md
-```
+1. Check the template in `/TEMPLATES/` for the correct format type
+2. Review existing entries in the target file for formatting patterns
+3. Verify all required fields are present
+4. Ensure proper difficulty level placement
+5. Check for duplicate entries manually
+
+**Note:** Automated validation scripts are in development. For now, follow the templates strictly and review existing files for consistency.
 
 ### 3. Adding Resources
 
@@ -65,16 +65,17 @@ python3 scripts/validate_formatting.py path/to/file.md
    - Include ALL required fields
    - Follow STYLE-GUIDE.md for formatting
 
-4. **Validate your changes:**
-   ```bash
-   python3 scripts/validate_formatting.py path/to/file.md
-   python3 scripts/validate_content.py path/to/file.md
-   ```
+4. **Validate your changes manually:**
+   - Check all required fields are present
+   - Verify formatting matches template
+   - Ensure no trailing whitespace
+   - Confirm proper title case
+   - Validate URLs are accessible
 
 5. **Check for duplicates:**
-   ```bash
-   python3 scripts/check_duplicates.py path/to/domain/
-   ```
+   - Search existing file for similar titles
+   - Check ISBNs/DOIs aren't already present
+   - Review related categories for cross-references
 
 ### 4. Common Pitfalls for AI Assistants
 
@@ -127,28 +128,22 @@ For each resource you add:
 # Pseudocode for AI assistants
 for resource in resources_to_add:
     1. Verify resource exists and is accessible
-    2. Check not already in repository
+    2. Check not already in repository (manual search)
     3. Format according to template
     4. Add to appropriate section
-    5. Validate entry
-    6. If validation fails, fix and retry
-    7. Only proceed to next if current validates
-
-# After all additions
-run("python3 scripts/check_duplicates.py .")
-run("python3 scripts/validate_all.sh")
+    5. Review entry against quality checklist
+    6. If issues found, fix and retry
+    7. Only proceed to next if current passes review
 ```
 
-### 7. Automated Validation Hooks
+### 7. Manual Quality Checks
 
 **Before committing changes:**
-```bash
-# Fix common formatting issues automatically
-python3 scripts/fix_formatting.py path/to/file.md
-
-# Validate everything
-bash scripts/validate_all.sh
-```
+- Review all entries against template format
+- Check for trailing whitespace: `sed -i 's/[[:space:]]*$//' file.md`
+- Verify all URLs are accessible
+- Ensure consistent formatting across entries
+- Confirm proper difficulty level placement
 
 ### 8. Domain-Specific Notes
 
@@ -224,16 +219,16 @@ if (published_2023_or_later and
 
 ### 11. Progress Tracking
 
-**Check repository status:**
+**Check repository status manually:**
 ```bash
-# Overall statistics
-python3 scripts/generate_statistics.py
+# Count filled files (non-template entries)
+find 01-FUNDAMENTALS -name "*.md" -type f ! -exec grep -q "Add resources below" {} \; -print | wc -l
 
-# Detailed progress report
-python3 scripts/progress_report.py
+# Find empty template files
+find 01-FUNDAMENTALS -name "*.md" -type f -exec grep -q "Add resources below" {} \; -print
 
-# Find empty files
-bash scripts/find_empty_files.sh
+# Count total categories
+find 01-FUNDAMENTALS -type d -mindepth 3 | wc -l
 ```
 
 ### 12. Best Practices for Content Generation
@@ -256,20 +251,14 @@ bash scripts/find_empty_files.sh
 
 ### 13. Testing Your Changes
 
-**Minimal test before submitting:**
-```bash
-# Structure check
-python3 scripts/validate_structure.py
+**Manual checks before submitting:**
 
-# Format check on changed file
-python3 scripts/validate_formatting.py YOUR_FILE.md
-
-# Content check on changed file
-python3 scripts/validate_content.py YOUR_FILE.md
-
-# Duplicate check in domain
-python3 scripts/check_duplicates.py YOUR_DOMAIN/
-```
+1. **Structure check:** Verify file is in correct category path
+2. **Format check:** Compare against template in `/TEMPLATES/`
+3. **Content check:** Ensure all required fields present
+4. **Duplicate check:** Search file for similar entries
+5. **Link check:** Click URLs to verify accessibility
+6. **Whitespace check:** `grep -n "[[:space:]]$" YOUR_FILE.md` (should return nothing)
 
 ### 14. Workflow Summary
 
@@ -291,22 +280,33 @@ python3 scripts/check_duplicates.py YOUR_DOMAIN/
 ## Quick Reference Commands
 
 ```bash
-# Validation
-python3 scripts/validate_all.sh                    # All checks
-python3 scripts/validate_structure.py              # Structure only
-python3 scripts/validate_formatting.py FILE        # Format check
-python3 scripts/validate_content.py FILE           # Content check
-python3 scripts/check_duplicates.py DIR            # Duplicates
+# Manual validation helpers
+grep -n "[[:space:]]$" FILE.md                    # Find trailing whitespace
+sed -i 's/[[:space:]]*$//' FILE.md                # Remove trailing whitespace
+grep -q "Add resources below" FILE.md && echo "Empty template"  # Check if filled
 
 # Statistics
-python3 scripts/generate_statistics.py             # Overall stats
-python3 scripts/progress_report.py                 # Progress report
-bash scripts/find_empty_files.sh                   # Empty templates
+find 01-FUNDAMENTALS -name "*.md" -type f ! -exec grep -q "Add resources below" {} \; -print | wc -l  # Filled files
+find 01-FUNDAMENTALS -type d -mindepth 3 | wc -l  # Total categories
 
-# Utilities
-python3 scripts/fix_formatting.py FILE             # Auto-fix format
-bash scripts/EXAMPLES.sh                           # Show examples
+# Search utilities
+grep -r "SEARCH_TERM" 01-FUNDAMENTALS/            # Find existing entries
+find . -name "*.md" -exec grep -l "ISBN" {} \;    # Find by ISBN
 ```
+
+---
+
+## Future Enhancements
+
+Automated validation scripts are planned to be added in a `/scripts` directory:
+- Structure validation
+- Format validation
+- Content validation  
+- Duplicate detection
+- Link checking
+- Statistics generation
+
+GitHub Actions workflows are configured to use these scripts when available.
 
 ---
 

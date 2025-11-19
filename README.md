@@ -105,10 +105,12 @@ topic-name/
 
 1. Find the appropriate category for your resource
 2. Open the correct format file (books.md, papers.md, etc.)
-3. Copy the template from any existing entry
+3. Copy the template from any existing entry or use templates in `/TEMPLATES/`
 4. Fill in all required fields
 5. Add to the appropriate difficulty section
 6. Submit a pull request
+
+**Note:** Automated validation scripts are planned for future implementation. Currently, manual review ensures quality standards.
 
 ### Required Fields
 

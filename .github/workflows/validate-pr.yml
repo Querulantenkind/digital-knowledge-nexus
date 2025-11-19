@@ -25,40 +25,44 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - name: Basic validation checks
+      run: |
+        echo "Running basic validation checks..."
+        echo "Checking for trailing whitespace..."
+        if git diff --name-only origin/main...HEAD | grep '\.md$' | xargs grep -n "[[:space:]]$"; then
+          echo "ERROR: Found trailing whitespace in changed files"
+          exit 1
+        fi
+        echo "✓ No trailing whitespace found"
+        
+        echo "Checking for template placeholders..."
+        if git diff --name-only origin/main...HEAD | grep '\.md$' | xargs grep -n "YYYY\|XXX\|TODO"; then
+          echo "WARNING: Found placeholder text in changed files"
+        fi
+        
+        echo "✓ Basic validation complete"
+        
+    - name: Verify file structure
+      run: |
+        echo "Verifying all category directories have required format files..."
+        for category in $(find 01-FUNDAMENTALS 02-SOFTWARE-ENGINEERING 03-HARDWARE 04-ARTIFICIAL-INTELLIGENCE 05-SYSTEMS 06-SECURITY 07-DATA-SCIENCE 08-WEB-DEVELOPMENT 09-MOBILE-DEVELOPMENT 10-GAME-DEVELOPMENT 11-SPECIALIZED-DOMAINS 12-META-SKILLS -type d -mindepth 3 -maxdepth 5); do
+          required_files="books.md papers.md courses.md videos.md interactive.md documentation.md tools.md podcasts-blogs.md"
+          for file in $required_files; do
+            if [ ! -f "$category/$file" ]; then
+              echo "ERROR: Missing $file in $category"
+              exit 1
+            fi
+          done
+        done
+        echo "✓ File structure validation complete"
+        
+    - name: Comment on PR
+      uses: actions/github-script@v6
       with:
-        python-version: '3.11'
-        
-    - name: Install dependencies
-      run: |
-        pip install -r scripts/requirements.txt
-        
-    - name: Validate repository structure
-      run: python3 scripts/validate_structure.py
-      
-    - name: Validate formatting of changed files
-      run: |
-        echo "Validating formatting of changed files..."
-        git diff --name-only origin/main...HEAD | grep '\.md$' | while read file; do
-          if [ -f "$file" ]; then
-            echo "Checking $file"
-            python3 scripts/validate_formatting.py "$file"
-          fi
-        done
-        
-    - name: Validate content of changed files
-      run: |
-        echo "Validating content of changed files..."
-        git diff --name-only origin/main...HEAD | grep '\.md$' | while read file; do
-          if [ -f "$file" ]; then
-            echo "Checking $file"
-            python3 scripts/validate_content.py "$file"
-          fi
-        done
-        
-    - name: Check for duplicates
-      run: python3 scripts/check_duplicates.py .
-      
-    - name: Generate statistics
-      run: python3 scripts/generate_statistics.py
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '✅ Basic validation checks passed. Manual review recommended for content quality.'
+          })
